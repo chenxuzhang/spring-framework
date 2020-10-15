@@ -793,12 +793,12 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 		try {
 			WebDataBinderFactory binderFactory = getDataBinderFactory(handlerMethod);
 			ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
-
+			// ServletInvocableHandlerMethod是HandlerMethod实现类,在方法处理器基础上增加了参数解析+返回值序列化功能
 			ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
-			invocableMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers);
-			invocableMethod.setHandlerMethodReturnValueHandlers(this.returnValueHandlers);
+			invocableMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers); // 参数解析器
+			invocableMethod.setHandlerMethodReturnValueHandlers(this.returnValueHandlers); // 返回值处理器
 			invocableMethod.setDataBinderFactory(binderFactory);
-			invocableMethod.setParameterNameDiscoverer(this.parameterNameDiscoverer);
+			invocableMethod.setParameterNameDiscoverer(this.parameterNameDiscoverer); // 设置参数名称解析器
 
 			ModelAndViewContainer mavContainer = new ModelAndViewContainer();
 			mavContainer.addAllAttributes(RequestContextUtils.getInputFlashMap(request));
@@ -823,7 +823,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 				}
 				invocableMethod = invocableMethod.wrapConcurrentResult(result);
 			}
-
+			// 执行方法。1、解析参数。2、执行方法。3、序列化返回值响应客户端
 			invocableMethod.invokeAndHandle(webRequest, mavContainer);
 			if (asyncManager.isConcurrentHandlingStarted()) {
 				return null;

@@ -127,11 +127,11 @@ public class HandlerExecutionChain {
 	 */
 	boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HandlerInterceptor[] interceptors = getInterceptors();
-		if (!ObjectUtils.isEmpty(interceptors)) {
+		if (!ObjectUtils.isEmpty(interceptors)) { // 顺序调用拦截器。按照下标升序。记录调用拦截器的下标
 			for (int i = 0; i < interceptors.length; i++) {
 				HandlerInterceptor interceptor = interceptors[i];
-				if (!interceptor.preHandle(request, response, this.handler)) {
-					triggerAfterCompletion(request, response, null);
+				if (!interceptor.preHandle(request, response, this.handler)) { // 调用结果为false,则从下标处倒序调用afterCompletion方法
+					triggerAfterCompletion(request, response, null); // 执行afterCompletion方法
 					return false;
 				}
 				this.interceptorIndex = i;
@@ -145,7 +145,7 @@ public class HandlerExecutionChain {
 	 */
 	void applyPostHandle(HttpServletRequest request, HttpServletResponse response, ModelAndView mv) throws Exception {
 		HandlerInterceptor[] interceptors = getInterceptors();
-		if (!ObjectUtils.isEmpty(interceptors)) {
+		if (!ObjectUtils.isEmpty(interceptors)) { // 从下标处倒序调用postHandle方法
 			for (int i = interceptors.length - 1; i >= 0; i--) {
 				HandlerInterceptor interceptor = interceptors[i];
 				interceptor.postHandle(request, response, this.handler, mv);

@@ -468,7 +468,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 * {@link org.springframework.web.context.ContextLoaderListener bootstrapped} context.
 	 * <p>Primarily added to support use in embedded servlet containers.
 	 * @since 4.0
-	 */
+	 */ // SpringBoot实例化DispatcherServlet后,进行容器注入。即:SpringBoot中只拥有一个容器,不像SpringMvc会拥有二个容器(web容器+Service层容器)
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		if (this.webApplicationContext == null && applicationContext instanceof WebApplicationContext) {
@@ -491,8 +491,8 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		long startTime = System.currentTimeMillis();
 
 		try {
-			this.webApplicationContext = initWebApplicationContext();
-			initFrameworkServlet();
+			this.webApplicationContext = initWebApplicationContext(); // 初始化SpringMvc容器,加载bean实例
+			initFrameworkServlet(); // 钩子方法,不做任何操作
 		}
 		catch (ServletException ex) {
 			this.logger.error("Context initialization failed", ex);
@@ -523,7 +523,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		WebApplicationContext rootContext =
 				WebApplicationContextUtils.getWebApplicationContext(getServletContext());
 		WebApplicationContext wac = null;
-
+		// webApplicationContext 不为空,SpringBoot启动后,通过setApplicationContext进行容器设置
 		if (this.webApplicationContext != null) {
 			// A context instance was injected at construction time -> use it
 			wac = this.webApplicationContext;
@@ -552,7 +552,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 			// No context instance is defined for this servlet -> create a local one
 			wac = createWebApplicationContext(rootContext);
 		}
-
+		// 保证初始化一次
 		if (!this.refreshEventReceived) {
 			// Either the context is not a ConfigurableApplicationContext with refresh
 			// support or the context injected at construction time had already been
@@ -561,7 +561,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		}
 
 		if (this.publishContext) {
-			// Publish the context as a servlet context attribute.
+			// 将上下文作为servlet上下文属性发布。
 			String attrName = getServletContextAttributeName();
 			getServletContext().setAttribute(attrName, wac);
 			if (this.logger.isDebugEnabled()) {

@@ -69,15 +69,15 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	private int order = Integer.MAX_VALUE;  // default: same as non-Ordered
 
 	private Object defaultHandler;
-
+	// request url解析
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
-
+	// path匹配
 	private PathMatcher pathMatcher = new AntPathMatcher();
-
+	// 拦截器集合
 	private final List<Object> interceptors = new ArrayList<Object>();
-
+	// 拦截器集合
 	private final List<HandlerInterceptor> adaptedInterceptors = new ArrayList<HandlerInterceptor>();
-
+	// 跨域处理器
 	private CorsProcessor corsProcessor = new DefaultCorsProcessor();
 
 	private final UrlBasedCorsConfigurationSource corsConfigSource = new UrlBasedCorsConfigurationSource();
@@ -339,7 +339,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 		return (count > 0 ? mappedInterceptors.toArray(new MappedInterceptor[count]) : null);
 	}
 
-
+	// RequestMapping对外的唯一访问入口。通过request获取可执行的处理器+拦截器链
 	/**
 	 * Look up a handler for the given request, falling back to the default
 	 * handler if no specific one is found.
@@ -349,7 +349,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	 */
 	@Override
 	public final HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
-		Object handler = getHandlerInternal(request);
+		Object handler = getHandlerInternal(request); // 钩子方法获取可执行的HandlerMethod
 		if (handler == null) {
 			handler = getDefaultHandler();
 		}
@@ -361,13 +361,13 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 			String handlerName = (String) handler;
 			handler = getApplicationContext().getBean(handlerName);
 		}
-
-		HandlerExecutionChain executionChain = getHandlerExecutionChain(handler, request);
-		if (CorsUtils.isCorsRequest(request)) {
-			CorsConfiguration globalConfig = this.corsConfigSource.getCorsConfiguration(request);
-			CorsConfiguration handlerConfig = getCorsConfiguration(handler, request);
+		// 1、全局配置 or 针对方法配置 如果都有则合并,反之取有的。2、生成新的HandlerExecutionChain(预检请求Option请求类型的,则生成一个新的预检处理器,校验跨域配置。针对跨域则生成一个新的拦截器,走拦截器校验跨域)
+		HandlerExecutionChain executionChain = getHandlerExecutionChain(handler, request); // 组装HandlerMethod+拦截器实体类->HandlerExecutionChain
+		if (CorsUtils.isCorsRequest(request)) { // request请求头中是否有origin参数。此参数需要进行跨域处理
+			CorsConfiguration globalConfig = this.corsConfigSource.getCorsConfiguration(request); // 从全局跨域配置中获取和当前url匹配的跨域配置
+			CorsConfiguration handlerConfig = getCorsConfiguration(handler, request); // 从MappingRegistry->corsLookup中获取处理器配置的跨域处理参数@CrossOrigin配置
 			CorsConfiguration config = (globalConfig != null ? globalConfig.combine(handlerConfig) : handlerConfig);
-			executionChain = getCorsHandlerExecutionChain(request, executionChain, config);
+			executionChain = getCorsHandlerExecutionChain(request, executionChain, config); // 重新生成HandlerExecutionChain。处理器:处理预检请求 or 添加处理跨域拦截器
 		}
 		return executionChain;
 	}
@@ -413,16 +413,16 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	protected HandlerExecutionChain getHandlerExecutionChain(Object handler, HttpServletRequest request) {
 		HandlerExecutionChain chain = (handler instanceof HandlerExecutionChain ?
 				(HandlerExecutionChain) handler : new HandlerExecutionChain(handler));
-
+		// 解析request访问的url来匹配拦截器(MappedInterceptor)
 		String lookupPath = this.urlPathHelper.getLookupPathForRequest(request);
 		for (HandlerInterceptor interceptor : this.adaptedInterceptors) {
-			if (interceptor instanceof MappedInterceptor) {
+			if (interceptor instanceof MappedInterceptor) { // 针对具体url的拦截器
 				MappedInterceptor mappedInterceptor = (MappedInterceptor) interceptor;
 				if (mappedInterceptor.matches(lookupPath, this.pathMatcher)) {
 					chain.addInterceptor(mappedInterceptor.getInterceptor());
 				}
 			}
-			else {
+			else { // 针对所有请求都要处理的拦截器
 				chain.addInterceptor(interceptor);
 			}
 		}
@@ -460,10 +460,10 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	 */
 	protected HandlerExecutionChain getCorsHandlerExecutionChain(HttpServletRequest request,
 			HandlerExecutionChain chain, CorsConfiguration config) {
-
+		// 预检请求,请求类型为options
 		if (CorsUtils.isPreFlightRequest(request)) {
 			HandlerInterceptor[] interceptors = chain.getInterceptors();
-			chain = new HandlerExecutionChain(new PreFlightHandler(config), interceptors);
+			chain = new HandlerExecutionChain(new PreFlightHandler(config), interceptors); // 创建针对预检请求的HandlerMethod
 		}
 		else {
 			chain.addInterceptor(new CorsInterceptor(config));

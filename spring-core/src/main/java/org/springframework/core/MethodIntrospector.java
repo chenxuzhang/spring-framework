@@ -61,7 +61,7 @@ public abstract class MethodIntrospector {
 			specificHandlerType = targetType;
 		}
 		handlerTypes.addAll(Arrays.asList(targetType.getInterfaces()));
-
+		// handlerTypes供检索的类
 		for (Class<?> currentHandlerType : handlerTypes) {
 			final Class<?> targetClass = (specificHandlerType != null ? specificHandlerType : currentHandlerType);
 

@@ -202,7 +202,7 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 
 		configurePathMatchingProperties(handlerMappingDef, element, parserContext);
 		readerContext.getRegistry().registerBeanDefinition(HANDLER_MAPPING_BEAN_NAME , handlerMappingDef);
-
+		// 设置跨域处理配置
 		RuntimeBeanReference corsConfigurationsRef = MvcNamespaceUtils.registerCorsConfigurations(null, parserContext, source);
 		handlerMappingDef.getPropertyValues().add("corsConfigurations", corsConfigurationsRef);
 

@@ -160,14 +160,14 @@ public class HandlerMethod {
 	private MethodParameter[] initMethodParameters() {
 		int count = this.bridgedMethod.getParameterTypes().length;
 		MethodParameter[] result = new MethodParameter[count];
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; i < count; i++) { // HandlerMethodParameter 每个参数封装成一个对象,含有参数的所有信息(形参类型、参数名称、参数所在形参中的位置下标)
 			HandlerMethodParameter parameter = new HandlerMethodParameter(i);
 			GenericTypeResolver.resolveParameterType(parameter, this.beanType);
 			result[i] = parameter;
 		}
 		return result;
 	}
-
+	// 解析方法配置的@ResponseStatus注解,方法没配置则取类上的此注解配置
 	private void evaluateResponseStatus() {
 		ResponseStatus annotation = getMethodAnnotation(ResponseStatus.class);
 		if (annotation == null) {

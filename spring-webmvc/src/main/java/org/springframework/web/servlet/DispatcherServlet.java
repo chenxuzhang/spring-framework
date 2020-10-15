@@ -471,13 +471,13 @@ public class DispatcherServlet extends FrameworkServlet {
 		this.cleanupAfterInclude = cleanupAfterInclude;
 	}
 
-
+	// SpringMvc容器初始化后,调用钩子方法回调此方法
 	/**
 	 * This implementation calls {@link #initStrategies}.
 	 */
 	@Override
 	protected void onRefresh(ApplicationContext context) {
-		initStrategies(context);
+		initStrategies(context); // 初始化SpringMvc 9大组件
 	}
 
 	/**
@@ -485,12 +485,12 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
 	 */
 	protected void initStrategies(ApplicationContext context) {
-		initMultipartResolver(context);
+		initMultipartResolver(context); // 上传组件(常用)
 		initLocaleResolver(context);
 		initThemeResolver(context);
-		initHandlerMappings(context);
-		initHandlerAdapters(context);
-		initHandlerExceptionResolvers(context);
+		initHandlerMappings(context); // (常用)
+		initHandlerAdapters(context); // (常用)
+		initHandlerExceptionResolvers(context); // 异常处理组件(常用)
 		initRequestToViewNameTranslator(context);
 		initViewResolvers(context);
 		initFlashMapManager(context);
@@ -502,7 +502,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * no multipart handling is provided.
 	 */
 	private void initMultipartResolver(ApplicationContext context) {
-		try {
+		try { // context SpringMvc容器上下文。上传组件需要从SpringMvc容器中获取
 			this.multipartResolver = context.getBean(MULTIPART_RESOLVER_BEAN_NAME, MultipartResolver.class);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Using MultipartResolver [" + this.multipartResolver + "]");
@@ -569,7 +569,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	private void initHandlerMappings(ApplicationContext context) {
 		this.handlerMappings = null;
-
+		// 获取SpringMvc容器和其祖先容器中HandlerMapping接口的实现类
 		if (this.detectAllHandlerMappings) {
 			// Find all HandlerMappings in the ApplicationContext, including ancestor contexts.
 			Map<String, HandlerMapping> matchingBeans =
@@ -580,7 +580,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				AnnotationAwareOrderComparator.sort(this.handlerMappings);
 			}
 		}
-		else {
+		else { // 单独获取SpringMvc容器中的HandlerMapping接口实现类
 			try {
 				HandlerMapping hm = context.getBean(HANDLER_MAPPING_BEAN_NAME, HandlerMapping.class);
 				this.handlerMappings = Collections.singletonList(hm);
@@ -589,7 +589,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				// Ignore, we'll add a default HandlerMapping later.
 			}
 		}
-
+		// 无配置,则获取默认配置的。DispatcherServlet.properties
 		// Ensure we have at least one HandlerMapping, by registering
 		// a default HandlerMapping if no other mappings are found.
 		if (this.handlerMappings == null) {
@@ -607,7 +607,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	private void initHandlerAdapters(ApplicationContext context) {
 		this.handlerAdapters = null;
-
+		// 逻辑同HandlerMapping
 		if (this.detectAllHandlerAdapters) {
 			// Find all HandlerAdapters in the ApplicationContext, including ancestor contexts.
 			Map<String, HandlerAdapter> matchingBeans =
@@ -935,14 +935,14 @@ public class DispatcherServlet extends FrameworkServlet {
 			try {
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
-
+				// 通过request获取HandlerExecutionChain(处理器+拦截器)
 				// Determine handler for the current request.
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null || mappedHandler.getHandler() == null) {
 					noHandlerFound(processedRequest, response);
 					return;
 				}
-
+				// 通过处理器类型检索处理适配器。
 				// Determine handler adapter for the current request.
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
@@ -958,11 +958,11 @@ public class DispatcherServlet extends FrameworkServlet {
 						return;
 					}
 				}
-
+				// 执行preHandler拦截器链
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
 					return;
 				}
-
+				// 通过适配器进行处理请求(1、挑选合适的解析器解析请求参数@PathVariable or @RequestParam,2、执行处理器方法,3、挑选合适的处理器处理结果@ResponseBody)
 				// Actually invoke the handler.
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
@@ -971,7 +971,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				}
 
 				applyDefaultViewName(processedRequest, mv);
-				mappedHandler.applyPostHandle(processedRequest, response, mv);
+				mappedHandler.applyPostHandle(processedRequest, response, mv); // 拦截器
 			}
 			catch (Exception ex) {
 				dispatchException = ex;
@@ -980,17 +980,17 @@ public class DispatcherServlet extends FrameworkServlet {
 				// As of 4.3, we're processing Errors thrown from handler methods as well,
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
-			}
+			} // 处理返回。有异常通过全局异常处理器处理回调。
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		}
-		catch (Exception ex) {
+		catch (Exception ex) { // 拦截器回调
 			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
 		}
-		catch (Throwable err) {
+		catch (Throwable err) { // 拦截器回调
 			triggerAfterCompletion(processedRequest, response, mappedHandler,
 					new NestedServletException("Handler processing failed", err));
 		}
-		finally {
+		finally { // 清理工作
 			if (asyncManager.isConcurrentHandlingStarted()) {
 				// Instead of postHandle and afterCompletion
 				if (mappedHandler != null) {
@@ -1029,7 +1029,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				logger.debug("ModelAndViewDefiningException encountered", exception);
 				mv = ((ModelAndViewDefiningException) exception).getModelAndView();
 			}
-			else {
+			else { // 全局异常处理
 				Object handler = (mappedHandler != null ? mappedHandler.getHandler() : null);
 				mv = processHandlerException(request, response, handler, exception);
 				errorView = (mv != null);
@@ -1054,7 +1054,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			// Concurrent handling started during a forward
 			return;
 		}
-
+		// 拦截器方法执行
 		if (mappedHandler != null) {
 			mappedHandler.triggerAfterCompletion(request, response, null);
 		}

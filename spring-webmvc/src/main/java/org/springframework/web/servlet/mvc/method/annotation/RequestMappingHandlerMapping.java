@@ -123,7 +123,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 		this.config.setTrailingSlashMatch(this.useTrailingSlashMatch);
 		this.config.setRegisteredSuffixPatternMatch(this.useRegisteredSuffixPatternMatch);
 		this.config.setContentNegotiationManager(getContentNegotiationManager());
-
+		// 初始化Controller中的方法,从实例中检索出可以对外提供服务的方法,并做url+方法映射。
 		super.afterPropertiesSet();
 	}
 
@@ -184,8 +184,8 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	 */
 	@Override
 	protected RequestMappingInfo getMappingForMethod(Method method, Class<?> handlerType) {
-		RequestMappingInfo info = createRequestMappingInfo(method);
-		if (info != null) {
+		RequestMappingInfo info = createRequestMappingInfo(method); // 根据方法创建RequestMappingInfo
+		if (info != null) { // 类中也存在@RequestMapping,则通过combine将两个@RequestMapping进行合并成一个RequestMappingInfo实例
 			RequestMappingInfo typeInfo = createRequestMappingInfo(handlerType);
 			if (typeInfo != null) {
 				info = typeInfo.combine(info);
@@ -246,7 +246,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	 */
 	protected RequestMappingInfo createRequestMappingInfo(
 			RequestMapping requestMapping, RequestCondition<?> customCondition) {
-
+		// requestMapping.path() == requestMapping.value() 两者相同
 		return RequestMappingInfo
 				.paths(resolveEmbeddedValuesInPatterns(requestMapping.path()))
 				.methods(requestMapping.method())
@@ -288,7 +288,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 		String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
 		return new RequestMatchResult(patterns.iterator().next(), lookupPath, getPathMatcher());
 	}
-
+	// 解析处理器方法上配置的@CrossOrigin配置
 	@Override
 	protected CorsConfiguration initCorsConfiguration(Object handler, Method method, RequestMappingInfo mappingInfo) {
 		HandlerMethod handlerMethod = createHandlerMethod(handler, method);

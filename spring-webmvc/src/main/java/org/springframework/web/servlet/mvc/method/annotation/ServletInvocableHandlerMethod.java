@@ -93,9 +93,9 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 	 */
 	public void invokeAndHandle(ServletWebRequest webRequest, ModelAndViewContainer mavContainer,
 			Object... providedArgs) throws Exception {
-
+		// 解析参数+反射调用方法
 		Object returnValue = invokeForRequest(webRequest, mavContainer, providedArgs);
-		setResponseStatus(webRequest);
+		setResponseStatus(webRequest); // @ResponseStatus 处理
 
 		if (returnValue == null) {
 			if (isRequestNotModified(webRequest) || getResponseStatus() != null || mavContainer.isRequestHandled()) {
@@ -109,7 +109,7 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 		}
 
 		mavContainer.setRequestHandled(false);
-		try {
+		try { // 处理返回结果
 			this.returnValueHandlers.handleReturnValue(
 					returnValue, getReturnValueType(returnValue), mavContainer, webRequest);
 		}
