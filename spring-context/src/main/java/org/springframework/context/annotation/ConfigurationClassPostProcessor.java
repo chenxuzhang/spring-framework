@@ -260,12 +260,12 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 		for (String beanName : candidateNames) {
 			BeanDefinition beanDef = registry.getBeanDefinition(beanName);
-			if (ConfigurationClassUtils.isFullConfigurationClass(beanDef) ||
+			if (ConfigurationClassUtils.isFullConfigurationClass(beanDef) || // 配置如果已经处理过,就略过...
 					ConfigurationClassUtils.isLiteConfigurationClass(beanDef)) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
 				}
-			}
+			} // 校验类上的配置注解信息。@Configuration、@Component、@ComponentScan、@Bean、@Import、@ImportResource 含有这些配置就收集起来,进行配置解析
 			else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
 				configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
 			}
@@ -275,7 +275,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		if (configCandidates.isEmpty()) {
 			return;
 		}
-
+		// 配置类按照@Order注解排序
 		// Sort by previously determined @Order value, if applicable
 		Collections.sort(configCandidates, new Comparator<BeanDefinitionHolder>() {
 			@Override
@@ -296,7 +296,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				this.importBeanNameGenerator = generator;
 			}
 		}
-
+		// ConfigurationClassParser用于解析@Configuration标记的配置类。
 		// Parse each @Configuration class
 		ConfigurationClassParser parser = new ConfigurationClassParser(
 				this.metadataReaderFactory, this.problemReporter, this.environment,
@@ -305,8 +305,8 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<BeanDefinitionHolder>(configCandidates);
 		Set<ConfigurationClass> alreadyParsed = new HashSet<ConfigurationClass>(configCandidates.size());
 		do {
-			parser.parse(candidates);
-			parser.validate();
+			parser.parse(candidates); // 解析逻辑,将符合的注册到bean工厂
+			parser.validate(); // 校验
 
 			Set<ConfigurationClass> configClasses = new LinkedHashSet<ConfigurationClass>(parser.getConfigurationClasses());
 			configClasses.removeAll(alreadyParsed);
@@ -316,7 +316,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				this.reader = new ConfigurationClassBeanDefinitionReader(
 						registry, this.sourceExtractor, this.resourceLoader, this.environment,
 						this.importBeanNameGenerator, parser.getImportRegistry());
-			}
+			} // 读取配置信息
 			this.reader.loadBeanDefinitions(configClasses);
 			alreadyParsed.addAll(configClasses);
 
@@ -327,7 +327,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				Set<String> alreadyParsedClasses = new HashSet<String>();
 				for (ConfigurationClass configurationClass : alreadyParsed) {
 					alreadyParsedClasses.add(configurationClass.getMetadata().getClassName());
-				}
+				} // 重复校验一下是否还有其他配置类未解析。如果有则接着解析。
 				for (String candidateName : newCandidateNames) {
 					if (!oldCandidateNames.contains(candidateName)) {
 						BeanDefinition bd = registry.getBeanDefinition(candidateName);

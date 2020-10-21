@@ -98,7 +98,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private final Set<String> singletonsCurrentlyInCreation =
 			Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(16));
 
-	/** Names of beans currently excluded from in creation checks */
+	/** 需要排除的bean名称 */
 	private final Set<String> inCreationCheckExclusions =
 			Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(16));
 
@@ -219,7 +219,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				}
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
-				}
+				} // 添加bean创建的标记,校验bean是否重复创建
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -249,10 +249,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				finally {
 					if (recordSuppressedExceptions) {
 						this.suppressedExceptions = null;
-					}
+					} // 移除bean创建的标记
 					afterSingletonCreation(beanName);
 				}
-				if (newSingleton) {
+				if (newSingleton) { // 添加单例bean至单例池
 					addSingleton(beanName, singletonObject);
 				}
 			}
@@ -341,7 +341,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * <p>The default implementation register the singleton as currently in creation.
 	 * @param beanName the name of the singleton about to be created
 	 * @see #isSingletonCurrentlyInCreation
-	 */
+	 */ // 不存在需要排除的bean集合中 && 还未创建改bean
 	protected void beforeSingletonCreation(String beanName) {
 		if (!this.inCreationCheckExclusions.contains(beanName) && !this.singletonsCurrentlyInCreation.add(beanName)) {
 			throw new BeanCurrentlyInCreationException(beanName);
@@ -353,7 +353,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * <p>The default implementation marks the singleton as not in creation anymore.
 	 * @param beanName the name of the singleton that has been created
 	 * @see #isSingletonCurrentlyInCreation
-	 */
+	 */ // 不存在需要排除的bean集合中 && 移除成功
 	protected void afterSingletonCreation(String beanName) {
 		if (!this.inCreationCheckExclusions.contains(beanName) && !this.singletonsCurrentlyInCreation.remove(beanName)) {
 			throw new IllegalStateException("Singleton '" + beanName + "' isn't currently in creation");

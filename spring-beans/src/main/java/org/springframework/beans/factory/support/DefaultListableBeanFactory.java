@@ -723,7 +723,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	protected boolean isBeanEligibleForMetadataCaching(String beanName) {
 		return (this.configurationFrozen || super.isBeanEligibleForMetadataCaching(beanName));
 	}
-
+	// 实例化所有非延迟初始化的单例类
 	@Override
 	public void preInstantiateSingletons() throws BeansException {
 		if (this.logger.isDebugEnabled()) {

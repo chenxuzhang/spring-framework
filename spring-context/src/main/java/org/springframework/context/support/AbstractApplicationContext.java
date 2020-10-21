@@ -508,42 +508,42 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
-			// Prepare this context for refreshing.
+			// 准备刷新上下文
 			prepareRefresh();
-
+			// 设置BeanFactory(bean工厂)
 			// Tell the subclass to refresh the internal bean factory.
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-
+			// 准备设置bean工厂内容,以供在容器上下文中使用(后置处理器、取消依赖的接口、注册环境变量信息、)
 			// Prepare the bean factory for use in this context.
 			prepareBeanFactory(beanFactory);
-
 			try {
+			    //
 				// Allows post-processing of the bean factory in context subclasses.
 				postProcessBeanFactory(beanFactory);
-
+                // 执行处理器回调逻辑 BeanDefinitionRegistryPostProcessor、BeanFactoryPostProcessor。ConfigurationClassPostProcessor:配置类解析
 				// Invoke factory processors registered as beans in the context.
 				invokeBeanFactoryPostProcessors(beanFactory);
-
+				// 从bean工厂获取后置处理器实现类,注册到Spring容器属性中
 				// Register bean processors that intercept bean creation.
 				registerBeanPostProcessors(beanFactory);
-
+				// 初始化MessageSource
 				// Initialize message source for this context.
 				initMessageSource();
-
+				// 初始化多播器(用于广播事件到事件监听器)。从Bean工厂获取ApplicationEventMulticaster接口实现类,并赋值给容器的applicationEventMulticaster属性
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
-
-				// Initialize other special beans in specific context subclasses.
-				onRefresh();
-
+				// SpringBoot在此扩展了内嵌Tomcat
+				// 初始化特定上下文子类中的其他特殊bean。
+				onRefresh(); // 正在执行Refresh过程中...
+				// 向多播器中注册监听器(多渠道),通过多播器发布早期事件
 				// Check for listener beans and register them.
 				registerListeners();
-
-				// Instantiate all remaining (non-lazy-init) singletons.
+				// Bean工厂初始化流程
+				// 实例化所有剩余的（非延迟初始化）单例
 				finishBeanFactoryInitialization(beanFactory);
-
+				// SpringBoot在此扩展了内嵌Tomcat的启动
 				// Last step: publish corresponding event.
-				finishRefresh();
+				finishRefresh(); // 结束Refresh执行。发布上下文初始化完毕的事件
 			}
 
 			catch (BeansException ex) {
@@ -805,18 +805,18 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * Doesn't affect other listeners, which can be added without being beans.
 	 */
 	protected void registerListeners() {
-		// Register statically specified listeners first.
+		// Register statically specified listeners first.// 通过应用上下文添加的监听器,加入多播器中
 		for (ApplicationListener<?> listener : getApplicationListeners()) {
 			getApplicationEventMulticaster().addApplicationListener(listener);
 		}
-
+		// 从bean工厂获取监听器,加入多播器
 		// Do not initialize FactoryBeans here: We need to leave all regular beans
 		// uninitialized to let post-processors apply to them!
 		String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class, true, false);
 		for (String listenerBeanName : listenerBeanNames) {
 			getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);
 		}
-
+		// 通过多播器广播早期事件
 		// Publish early application events now that we finally have a multicaster...
 		Set<ApplicationEvent> earlyEventsToProcess = this.earlyApplicationEvents;
 		this.earlyApplicationEvents = null;
@@ -863,7 +863,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// Allow for caching all bean definition metadata, not expecting further changes.
 		beanFactory.freezeConfiguration();
 
-		// Instantiate all remaining (non-lazy-init) singletons.
+		// 实例化所有剩余的（非延迟初始化）单例
 		beanFactory.preInstantiateSingletons();
 	}
 

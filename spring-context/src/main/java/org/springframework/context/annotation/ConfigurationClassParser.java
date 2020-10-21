@@ -111,7 +111,7 @@ class ConfigurationClassParser {
 
 
 	private final Log logger = LogFactory.getLog(getClass());
-
+	// 元信息读取工厂类
 	private final MetadataReaderFactory metadataReaderFactory;
 
 	private final ProblemReporter problemReporter;
@@ -121,7 +121,7 @@ class ConfigurationClassParser {
 	private final ResourceLoader resourceLoader;
 
 	private final BeanDefinitionRegistry registry;
-
+	// @ComponentScan注解解析器
 	private final ComponentScanAnnotationParser componentScanParser;
 
 	private final ConditionEvaluator conditionEvaluator;
@@ -134,7 +134,7 @@ class ConfigurationClassParser {
 	private final List<String> propertySourceNames = new ArrayList<String>();
 
 	private final ImportStack importStack = new ImportStack();
-
+	// 延迟Import导入
 	private List<DeferredImportSelectorHolder> deferredImportSelectors;
 
 
@@ -214,7 +214,7 @@ class ConfigurationClassParser {
 
 
 	protected void processConfigurationClass(ConfigurationClass configClass) throws IOException {
-		if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) {
+		if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) { // @Condition 过滤
 			return;
 		}
 
@@ -259,7 +259,7 @@ class ConfigurationClassParser {
 	 */
 	protected final SourceClass doProcessConfigurationClass(ConfigurationClass configClass, SourceClass sourceClass)
 			throws IOException {
-
+		// 处理嵌套子类的配置处理。递归解析
 		// Recursively process any member (nested) classes first
 		processMemberClasses(configClass, sourceClass);
 
@@ -287,14 +287,14 @@ class ConfigurationClassParser {
 						this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
 				// Check the set of scanned definitions for any further config classes and parse recursively if needed
 				for (BeanDefinitionHolder holder : scannedBeanDefinitions) {
-					if (ConfigurationClassUtils.checkConfigurationClassCandidate(
+					if (ConfigurationClassUtils.checkConfigurationClassCandidate( // 扫描出来的配置类信息,校验是否含有配置注解信息,如果有的话就加入到解析配置类步骤
 							holder.getBeanDefinition(), this.metadataReaderFactory)) {
 						parse(holder.getBeanDefinition().getBeanClassName(), holder.getBeanName());
 					}
 				}
 			}
 		}
-
+		// @Import注解解析。ImportSelector、DeferredImportSelector、ImportBeanDefinitionRegistrar
 		// Process any @Import annotations
 		processImports(configClass, sourceClass, getImports(sourceClass), true);
 

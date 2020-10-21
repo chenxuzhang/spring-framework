@@ -360,9 +360,9 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 	@Override
 	public PropertyValues postProcessPropertyValues(
 			PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {
-
+		// 获取@Autowired、@Value、@Inject 修饰的方法和属性(方法排前)
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
-		try {
+		try { // 进行注入
 			metadata.inject(bean, beanName, pvs);
 		}
 		catch (BeanCreationException ex) {
@@ -655,7 +655,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					DependencyDescriptor currDesc = new DependencyDescriptor(methodParam, this.required);
 					currDesc.setContainingClass(bean.getClass());
 					descriptors[i] = currDesc;
-					try {
+					try { // 从bean工厂获取依赖的实例。可对set list 等进行装配
 						Object arg = beanFactory.resolveDependency(currDesc, beanName, autowiredBeans, typeConverter);
 						if (arg == null && !this.required) {
 							arguments = null;

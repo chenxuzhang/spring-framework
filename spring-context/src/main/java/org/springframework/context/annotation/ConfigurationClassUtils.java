@@ -49,7 +49,7 @@ abstract class ConfigurationClassUtils {
 	private static final String CONFIGURATION_CLASS_FULL = "full";
 
 	private static final String CONFIGURATION_CLASS_LITE = "lite";
-
+	// key:org.springframework.context.annotation.ConfigurationClassPostProcessor.configurationClass
 	private static final String CONFIGURATION_CLASS_ATTRIBUTE =
 			Conventions.getQualifiedAttributeName(ConfigurationClassPostProcessor.class, "configurationClass");
 
@@ -82,7 +82,7 @@ abstract class ConfigurationClassUtils {
 		if (className == null) {
 			return false;
 		}
-
+		// 解析当前类的注解元数据信息
 		AnnotationMetadata metadata;
 		if (beanDef instanceof AnnotatedBeanDefinition &&
 				className.equals(((AnnotatedBeanDefinition) beanDef).getMetadata().getClassName())) {
@@ -107,10 +107,10 @@ abstract class ConfigurationClassUtils {
 				return false;
 			}
 		}
-
+		// 注解含有@Configuration。设置标记
 		if (isFullConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
-		}
+		} // 注解含有@ComponentScan、@Component、@Import、@ImportResource、@Bean 。设置标记
 		else if (isLiteConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}

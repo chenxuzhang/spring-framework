@@ -72,7 +72,7 @@ public class SimpleMetadataReaderFactory implements MetadataReaderFactory {
 
 	@Override
 	public MetadataReader getMetadataReader(String className) throws IOException {
-		String resourcePath = ResourceLoader.CLASSPATH_URL_PREFIX +
+		String resourcePath = ResourceLoader.CLASSPATH_URL_PREFIX + // 拼接class文件类路径
 				ClassUtils.convertClassNameToResourcePath(className) + ClassUtils.CLASS_FILE_SUFFIX;
 		Resource resource = this.resourceLoader.getResource(resourcePath);
 		if (!resource.exists()) {
